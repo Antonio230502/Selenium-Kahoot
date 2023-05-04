@@ -4,6 +4,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using System.Threading;
 using System.Collections.Generic;
+using System.Linq;
 
 //Código del kahoot 271 4095
 
@@ -62,12 +63,20 @@ namespace PracticaKahoot
         private void btnEnviar_Click(object sender, EventArgs e)
         {
             guardarDatos();
-            abrirPagina("https://kahoot.it/");
 
-            agregarUsuario(usuarios.Pop());
+            //Abrir navegador
+            var chromeDriverService = ChromeDriverService.CreateDefaultService();
+            chromeDriverService.HideCommandPromptWindow = true;
+            driver = new ChromeDriver(chromeDriverService, new ChromeOptions());
+            driver.Manage().Window.Maximize();
 
-            //foreach (string usuario in usuarios)
-            //    agregarUsuario(usuario);
+            foreach (string usuario in usuarios)
+                agregarUsuario(usuario);
+
+            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
+            js.ExecuteScript("window.close();");
+
+            usuarios.Clear();
         }
 
         private void guardarDatos()
@@ -80,6 +89,10 @@ namespace PracticaKahoot
 
         private void agregarUsuario(string usuario)
         {
+            //Abrir pagina
+            driver.Navigate().GoToUrl("https://kahoot.it/");
+            Thread.Sleep(2000);
+
             //Escribir el código del juego en el único input que hay
             IWebElement inputCodigo = driver.FindElement(By.Name("gameId"));
             inputCodigo.SendKeys(codigoJuego);
@@ -99,16 +112,12 @@ namespace PracticaKahoot
             IWebElement botonOkGo = driver.FindElement(By.TagName("button"));
             botonOkGo.Click();
             Thread.Sleep(2000);
-        }
 
-        private void abrirPagina(string url)
-        {
-            var chromeDriverService = ChromeDriverService.CreateDefaultService();
-            chromeDriverService.HideCommandPromptWindow = true;
-            driver = new ChromeDriver(chromeDriverService, new ChromeOptions());
-            driver.Navigate().GoToUrl(url);
-            driver.Manage().Window.Maximize();
-            Thread.Sleep(2000);
+            //IWebElement body = driver.FindElement(By.TagName("body"));
+            //body.SendKeys(OpenQA.Selenium.Keys.Control + "t");
+            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
+            js.ExecuteScript("window.open();");
+            driver.SwitchTo().Window(driver.WindowHandles.Last());
         }
 
         private void txtCodigoJuego_KeyPress(object sender, KeyPressEventArgs e)
